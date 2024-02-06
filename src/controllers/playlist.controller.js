@@ -72,21 +72,89 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   // if(!isValidObjectId(playlistId && videoId)){
   //   throw new ApiError(400,"Invalid playlistId or videoId")
   // }
+  const addVideoByIdToPlaylist = await Playlist.findByIdAndUpdate(
+    { _id: playlistId },
+    {
+      $push: {
+        videoId,
+      },
+    },
+    { new: true }
+  );
+  new ApiResponse(
+    200,
+    "Successfully addVideoToPlaylist",
+    addVideoByIdToPlaylist
+  );
 });
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
   // TODO: remove video from playlist
+  if (!playlistId || !videoId) {
+    throw new ApiError(400, "All filed are required");
+  }
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlistId");
+  }
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid videoId");
+  }
+  // if(!isValidObjectId(playlistId && videoId)){
+  //   throw new ApiError(400,"Invalid playlistId or videoId")
+  // }
+  const removeVideoByIdFromPlaylist = await Playlist.findByIdAndUpdate(
+    { _id: playlistId },
+    {
+      $pull: {
+        videoId,
+      },
+    },
+    { new: true }
+  );
+  new ApiResponse(
+    200,
+    "Succesfully remove Video from Playlist",
+    removeVideoByIdFromPlaylist
+  );
 });
 
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
+  if (!playlistId) {
+    throw new ApiError(400, "All filed are required");
+  }
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlistId");
+  }
+  const deletePlaylistById = await Playlist.findByIdAndUpdate(
+    { _id: playlistId },
+    {
+      $set: {
+        playlistId: undefined,
+      },
+    },
+    { new: true }
+  );
+  new ApiResponse(200, "SuccessFully DeletePlaylist", deletePlaylistById);
   // TODO: delete playlist
 });
 
 const updatePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
+  if (!playlistId) {
+    throw new ApiError(400, "All filed are required");
+  }
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlistId");
+  }
   const { name, description } = req.body;
+  const updatePlaylistById = await Playlist.findByIdAndUpdate(
+    { _id: playlistId },
+    { $set: { name, description } },
+    { new: true }
+  );
+  new ApiResponse(200, "Successfully updatePlaylist", updatePlaylistById);
   //TODO: update playlist
 });
 
