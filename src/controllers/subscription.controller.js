@@ -8,7 +8,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   // TODO: toggle subscription
-  if (channelId) {
+  if (!channelId) {
     throw new ApiError(400, "Please provide channelId");
   }
   if (!mongoose.isValidObjectId(channelId)) {
@@ -16,7 +16,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   }
   const findSubscription = await Subscription.findOne({ channel: channelId });
   if (findSubscription) {
-    await Subscription.deleteOne({ channelId }, { new: true });
+    await Subscription.deleteOne({ channelId });
     return res.status(200).json(200, "Successfully Unsubscrided");
   }
   if (!findSubscription) {
