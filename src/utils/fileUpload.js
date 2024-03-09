@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { error } from "console";
 import fs from "fs";
 
 cloudinary.config({
@@ -29,12 +30,28 @@ export const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export const deleteOnCloudinary = async (localFilePath) => {
+export const deleteOnCloudinary = async (publicId) => {
   try {
-    if (!localFilePath) return null;
-    const Deleteresponse = await cloudinary.uploader.destroy(localFilePath);
-    return Deleteresponse;
+    if (!publicId) return null;
+
+    // Delete the file from Cloudinary using the public ID
+    const deletionResponse = cloudinary.uploader.destroy(
+      publicId,
+      (error, result) => {
+        if (error) {
+          return error;
+        } else {
+          return deletionResponse;
+        }
+      }
+    );
+
+    // Log a success message (you can uncomment the following line if needed)
   } catch (error) {
-    return res.status(500).json(error.msg);
+    // If an error occurs during deletion, log the error (customize as needed)
+    console.error("Error deleting file from Cloudinary:", error);
+
+    // Return null to indicate that the deletion failed
+    return null;
   }
 };

@@ -207,28 +207,28 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params;
-  //TODO: delete video
-  if (!videoId) {
-    throw new ApiError(400, "please provide VideoId");
+  try {
+    const { videoId } = req.params;
+    //TODO: delete video
+    if (!videoId) {
+      throw new ApiError(400, "please provide VideoId");
+    }
+    if (!mongoose.isValidObjectId(videoId)) {
+      throw new ApiError(400, "Invalid videoId");
+    }
+    const deleteDVideo = await deleteOnCloudinary(videoId);
+    console.log(deleteDVideo);
+    if (deleteDVideo && deleteDVideo.result == "ok") {
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "SuccessFully Deleted the Video"));
+    } else {
+      throw new ApiError(400, "Error while Deleting Video");
+    }
+  } catch (error) {
+    return res.status(500).json({ status: false, msg: error.msg });
   }
-  if (!mongoose.isValidObjectId(videoId)) {
-    throw new ApiError(400, "Invalid videoId");
-  }
-
-  const deletedVideo = await Video.deleteOne({ videoId });
-  if (!deletedVideo) {
-    throw new ApiError(400, "Video Can't be Delete try again later");
-  }
-  const destoryVideo = await deleteOnCloudinary(videoId.videoFile);
-  if (!destoryVideo.url) {
-    throw new ApiError(400, "Video Can't be Delete try again later");
-  }
-  return res
-    .status(200)
-    .json(new ApiResponse(200, deletedVideo, "SuccessFully Deleted the Video"));
 });
-
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   if (!videoId) {
