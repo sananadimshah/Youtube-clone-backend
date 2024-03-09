@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/fileUpload.js";
+import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/fileUpload.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
@@ -149,17 +149,16 @@ const getVideoById = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const getVideo = await Video.findbyId(videoId);
+  const getVideo = await Video.findById(videoId);
   if (!getVideo) {
     throw new ApiError(404, "Video not found");
   }
   return res
     .status(200)
-    .send(200, new ApiResponse(getVideo, "SuccessFully get the Video"));
+    .json(new ApiResponse(200, getVideo, "SuccessFully get the Video"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
-  //TODO: update video details like title, description, thumbnail
   const { videoId } = req.params;
   if (!videoId) {
     throw new ApiError(400, "please provide VideoId");
@@ -167,15 +166,20 @@ const updateVideo = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const { title, description } = req.body;
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(400, "Video not Found");
+  }
   const obj = {};
+  const { title, description } = req.body;
   const thumbnail = req.file?.path;
   if (thumbnail) {
+    await deleteOnCloudinary(video.thumbnail);
     const thumbnailfile = await uploadOnCloudinary(thumbnail);
     if (!thumbnailfile.url) {
       throw new ApiError(400, "Error while uploading thumbnailFile");
     }
-    obj.thumbnailfile;
+    obj.thumbnailfile = thumbnailfile.url;
   }
   if (title) {
     obj.title = title;
@@ -183,13 +187,13 @@ const updateVideo = asyncHandler(async (req, res) => {
   if (description) {
     obj.description = description;
   }
-
   const updatedVideo = await Video.findByIdAndUpdate(
     videoId,
     {
       $set: {
-        data: obj,
-        thumbnail: obj.thumbnailfile.url,
+        title: obj.title || video.title,
+        description: obj.description || video.description,
+        thumbnail: obj.thumbnailfile || video.thumbnail,
       },
     },
     { new: true }
@@ -199,7 +203,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .send(200, new ApiResponse(updatedVideo, "SuccessFully updated the Video"));
+    .json(new ApiResponse(200, updatedVideo, "SuccessFully updated the Video"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
@@ -211,13 +215,18 @@ const deleteVideo = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
+
   const deletedVideo = await Video.deleteOne({ videoId });
   if (!deletedVideo) {
     throw new ApiError(400, "Video Can't be Delete try again later");
   }
+  const destoryVideo = await deleteOnCloudinary(videoId.videoFile);
+  if (!destoryVideo.url) {
+    throw new ApiError(400, "Video Can't be Delete try again later");
+  }
   return res
     .status(200)
-    .send(200, new ApiResponse(deletedVideo, "SuccessFully Deleted the Video"));
+    .json(new ApiResponse(200, deletedVideo, "SuccessFully Deleted the Video"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
