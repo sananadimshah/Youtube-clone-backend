@@ -35,16 +35,7 @@ export const deleteOnCloudinary = async (publicId) => {
     if (!publicId) return null;
 
     // Delete the file from Cloudinary using the public ID
-    const deletionResponse = cloudinary.uploader.destroy(
-      publicId,
-      (error, result) => {
-        if (error) {
-          return error;
-        } else {
-          return deletionResponse;
-        }
-      }
-    );
+    const deletionResponse = cloudinary.uploader.destroy(publicId);
 
     // Log a success message (you can uncomment the following line if needed)
   } catch (error) {
