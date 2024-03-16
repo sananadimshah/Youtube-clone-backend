@@ -4,7 +4,11 @@ import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/fileUpload.js";
+import {
+  uploadOnCloudinary,
+  deleteOnCloudinaryVideo,
+  deleteOnCloudinaryImage,
+} from "../utils/fileUpload.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   //TODO: get all videos based on query, sort, pagination
@@ -209,26 +213,42 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
   try {
     const { videoId } = req.params;
-    //TODO: delete video
     if (!videoId) {
-      throw new ApiError(400, "please provide VideoId");
+      throw new ApiError(400, "Please provide videoId");
     }
     if (!mongoose.isValidObjectId(videoId)) {
       throw new ApiError(400, "Invalid videoId");
     }
-    const deleteDVideo = await deleteOnCloudinary(videoId);
-    console.log(deleteDVideo);
-    if (deleteDVideo && deleteDVideo.result == "ok") {
+    const video = await Video.findById(videoId);
+    if (!video) {
+      throw new ApiError(404, "Video not found");
+    }
+    // Taking out thumbnail and video file
+    const videoFile = video.videoFile.public_id;
+    const thumbnail = video.thumbnail.public_id;
+
+    // Delete video file and thumbnail from cloudinary
+    await deleteOnCloudinaryVideo(videoFile);
+    await deleteOnCloudinaryImage(thumbnail);
+
+    // Delete the video from the database
+    const deletedVideo = await Video.findByIdAndDelete(videoId);
+    if (!deletedVideo) {
       return res
         .status(200)
-        .json(new ApiResponse(200, "SuccessFully Deleted the Video"));
+        .json(new ApiResponse(200, "This video is already deleted"));
     } else {
-      throw new ApiError(400, "Error while Deleting Video");
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "Successfully deleted video"));
     }
   } catch (error) {
-    return res.status(500).json({ status: false, msg: error.msg });
+    return res
+      .status(error.status || 500)
+      .json({ status: false, msg: error.message });
   }
 });
+
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   if (!videoId) {
@@ -237,7 +257,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const publishStatus = await Video.findbyId(videoId);
+  const publishStatus = await Video.findById(videoId);
   if (publishStatus.isPublished === true) {
     const unPublished = await Video.findByIdAndUpdate(
       videoId,
@@ -256,7 +276,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
     return res
       .status(200)
-      .json(200, new ApiResponse(Published, "SuccessFully Published"));
+      .json(new ApiResponse(200, Published, "SuccessFully Published"));
   }
 });
 

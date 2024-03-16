@@ -30,19 +30,28 @@ export const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export const deleteOnCloudinary = async (publicId) => {
+export const deleteOnCloudinaryVideo = async (oldVideofile) => {
   try {
-    if (!publicId) return null;
-
-    // Delete the file from Cloudinary using the public ID
-    const deletionResponse = cloudinary.uploader.destroy(publicId);
-
-    // Log a success message (you can uncomment the following line if needed)
+    if (!oldVideofile) return null;
+    const deletionResponse = await cloudinary.uploader.destroy(oldVideofile, {
+      resource_type: "video",
+    });
+    return deletionResponse;
   } catch (error) {
-    // If an error occurs during deletion, log the error (customize as needed)
     console.error("Error deleting file from Cloudinary:", error);
+    return null;
+  }
+};
 
-    // Return null to indicate that the deletion failed
+export const deleteOnCloudinaryImage = async (oldVideofile) => {
+  try {
+    if (!oldVideofile) return null;
+    const deletionResponse = await cloudinary.uploader.destroy(oldVideofile, {
+      resource_type: "image",
+    });
+    return deletionResponse;
+  } catch (error) {
+    console.error("Error deleting file from Cloudinary:", error);
     return null;
   }
 };
