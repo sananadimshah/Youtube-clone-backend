@@ -169,6 +169,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
       duration: videoFileResponse.duration,
       owner: req.user?._id,
     });
+    console.log(newVideo);
     if (!newVideo) {
       throw new ApiError("Error while creating newVideo");
     }
@@ -237,7 +238,11 @@ const getVideoById = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const getVideo = await Video.findById(videoId);
+  const getVideo = await Video.findByIdAndUpdate(
+    videoId,
+    { $inc: { views: 1 } },
+    { new: true }
+  );
   if (!getVideo) {
     throw new ApiError(404, "Video not found");
   }

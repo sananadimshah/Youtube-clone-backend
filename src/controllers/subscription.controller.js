@@ -14,30 +14,22 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(channelId)) {
     throw new ApiError(400, "Invalid channelId");
   }
-
-  try {
-    const findSubscription = await Subscription.findOne({ channel: channelId });
-    if (findSubscription) {
-      await Subscription.deleteOne({ channel: channelId });
-      return res
-        .status(200)
-        .json({ status: true, msg: "SuccessFully unSubscrided Channel" });
-    }
-    console.log(findSubscription);
-    if (!findSubscription) {
-      const subscribe = await Subscription.create({
-        channel: channelId,
-        subscriber: req.user._id,
-      });
-      return res
-        .status(201)
-        .json(
-          new ApiResponse(200, subscribe, "Successfully Channel Subscride")
-        );
-    }
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong");
+  const findSubscription = await Subscription.findOne({
+    channel: channelId,
+  });
+  if (findSubscription) {
+    await Subscription.deleteOne({ channel: channelId }, { new: true });
+    return res
+      .status(200)
+      .json({ status: true, msg: "SuccessFully unSubscrided Channel" });
   }
+  const subscribed = await Subscription.create({
+    channel: channelId,
+    subscriber: req.user._id,
+  });
+  return res
+    .status(201)
+    .json(new ApiResponse(200, subscribed, "Successfully Channel Subscrided"));
 });
 
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
