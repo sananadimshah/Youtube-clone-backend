@@ -9,136 +9,15 @@ import {
   deleteOnCloudinaryVideo,
   deleteOnCloudinaryImage,
 } from "../utils/fileUpload.js";
-
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-  console.log(userId);
-  const pipeline = [];
-
-  // for using Full Text based search u need to create a search index in mongoDB atlas
-  // you can include field mapppings in search index eg.title, description, as well
-  // Field mappings specify which fields within your documents should be indexed for text search.
-  // this helps in seraching only in title, desc providing faster search results
-  // here the name of search index is 'search-videos'
-  if (query) {
-    pipeline.push({
-      $search: {
-        index: "search-videos",
-        text: {
-          query: query,
-          path: ["title", "description"], //search only on title, desc
-        },
-      },
-    });
+  const result = await Video.find();
+  if (!result) {
+    throw new ApiError(400, "can't get the videos");
   }
-
-  if (userId) {
-    if (!isValidObjectId(userId)) {
-      throw new ApiError(400, "Invalid userId");
-    }
-
-    pipeline.push({
-      $match: {
-        owner: new mongoose.Types.ObjectId(userId),
-      },
-    });
-  }
-
-  // fetch videos only that are set isPublished as true
-  pipeline.push({ $match: { isPublished: true } });
-
-  //sortBy can be views, createdAt, duration
-  //sortType can be ascending(-1) or descending(1)
-  if (sortBy && sortType) {
-    pipeline.push({
-      $sort: {
-        [sortBy]: sortType === "asc" ? 1 : -1,
-      },
-    });
-  } else {
-    pipeline.push({ $sort: { createdAt: -1 } });
-  }
-
-  pipeline.push(
-    {
-      $lookup: {
-        from: "users",
-        localField: "owner",
-        foreignField: "_id",
-        as: "ownerDetails",
-        pipeline: [
-          {
-            $project: {
-              username: 1,
-              "avatar.url": 1,
-            },
-          },
-        ],
-      },
-    },
-    {
-      $unwind: "$ownerDetails",
-    }
-  );
-
-  const videoAggregate = Video.aggregate(pipeline);
-
-  const options = {
-    page: parseInt(page, 10),
-    limit: parseInt(limit, 10),
-  };
-
-  const video = await Video.aggregatePaginate(videoAggregate, options);
-
-  return res
+  res
     .status(200)
-    .json(new ApiResponse(200, video, "Videos fetched successfully"));
+    .json(new ApiResponse(200, result, "Video fetch Successfully"));
 });
-
-// const getAllVideos = asyncHandler(async (req, res) => {
-//   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
-//   //TODO: get all videos based on query, sort, pagination
-//   const options = {
-//     page: Number(page) || 1,
-//     limit: Number(limit) || 10,
-//   };
-//   const pipeline = [];
-//   if (userId) {
-//     pipeline.push({
-//       $match: {
-//         _id: new mongoose.Types.ObjectId(userId),
-//       },
-//     });
-//   }
-//   if (query){
-//     console.log(query);
-//     pipeline.push({
-//       $match: {
-//         $text: {
-//           $search: query,
-//         },
-//       },
-//     });
-//   }
-//   console.log("sortBy:", sortBy);
-//   console.log("sortType:", sortType);
-//   if (sortBy && sortType) {
-//     let sortObj = {};
-//     sortObj[sortBy] = sortType === "asc" ? 1 : -1;
-//     pipeline.push({
-//       $sort: sortObj,
-//     });
-//   }
-
-//   const aggregate = await Video.aggregate(pipeline);
-//   const result = await Video.aggregatePaginate(aggregate, options);
-//   if (!result) {
-//     throw new ApiError(400, "can't get the video");
-//   }
-//   res
-//     .status(200)
-//     .json(new ApiResponse(200, result, "Video fetch Successfully"));
-// });
 
 const publishAVideo = asyncHandler(async (req, res) => {
   try {
@@ -185,7 +64,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
     });
   }
 });
-// const publishAVideo = asyncHandler(async (req, res) => {
 //   // TODO: get video, upload to cloudinary, create video
 
 //   try {

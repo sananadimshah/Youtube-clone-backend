@@ -14,12 +14,12 @@ const getVideoComments = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid videoId");
   }
   const { page = 1, limit = 10 } = req.query;
-  // const findCommentonVideo = await Comment.find({video:videoId}).skip(limit*page).limit(limit)
-  // if(!findCommentonVideo){
-  //   throw new ApiError(400,"No comment Exist for a video")
-  // }
+  const option = {
+    page: Number(page) || 1,
+    limit: Number(limit) || 10,
+  };
   const aggregate = await Comment.aggregate([{ $match: { video: videoId } }]);
-  const result = await Comment.aggregatePaginate(aggregate, req.query);
+  const result = await Comment.aggregatePaginate(aggregate, option);
   if (!result) {
     throw new ApiError(400, "No comment Exist for a video");
   }
@@ -43,6 +43,7 @@ const addComment = asyncHandler(async (req, res) => {
   const addCommentoVideo = await Comment.create({
     content,
     owner: req.user._id,
+    videoId: videoId,
   });
   if (!addCommentoVideo) {
     throw new ApiError(400, "Can'nt add comment");
@@ -70,7 +71,7 @@ const updateComment = asyncHandler(async (req, res) => {
   const { content } = req.body;
   const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
-    { $set: content },
+    { $set: { content } },
     { new: true }
   );
   if (!updatedComment) {
