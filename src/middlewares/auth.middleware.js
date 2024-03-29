@@ -27,3 +27,23 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     throw new ApiError(401, "Invalid access token");
   }
 });
+
+// export const Authorization = asyncHandler(async (req, _, next) => {
+//   try {
+//     const user = req.params.userId;
+//     const ValidUser = await User.findById(user);
+//     if (!ValidUser) {
+//       throw new ApiError(400, "Invalid User ID");
+//     }
+//     if (ValidUser._id.toString() !== req.user._id.toString()) {
+//       throw new ApiError(
+//         400,
+//         "Invalid User permission denied,You are not authorized to perform this action"
+//       );
+//     }
+
+//     next();
+//   } catch (err) {
+//     throw new ApiError(403, "Invalid User");
+//   }
+// });

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Video } from "../models/video.model.js";
 import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -7,13 +8,14 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
   const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
   if (!videoId) {
     throw new ApiError(400, "Please provide videoId");
   }
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const { page = 1, limit = 10 } = req.query;
+
   const option = {
     page: Number(page) || 1,
     limit: Number(limit) || 10,
@@ -39,11 +41,15 @@ const addComment = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
   const { content } = req.body;
   const addCommentoVideo = await Comment.create({
     content,
     owner: req.user._id,
-    videoId: videoId,
+    video: video._id,
   });
   if (!addCommentoVideo) {
     throw new ApiError(400, "Can'nt add comment");
@@ -68,6 +74,15 @@ const updateComment = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(commentId)) {
     throw new ApiError(400, "Invalid commentId");
   }
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (comment.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
+
   const { content } = req.body;
   const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
@@ -91,12 +106,19 @@ const deleteComment = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(commentId)) {
     throw new ApiError(400, "Invalid commentId");
   }
-  const { content } = req.body;
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (comment.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
   const deletedcomment = await Comment.findByIdAndDelete(commentId, {
     new: true,
   });
   if (!deletedcomment) {
-    throw new ApiError(404, "Commet not found");
+    throw new ApiError(404, "Comment already Deleted");
   }
   return res
     .status(200)

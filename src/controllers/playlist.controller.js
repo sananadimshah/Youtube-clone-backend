@@ -1,5 +1,7 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Playlist } from "../models/playlist.model.js";
+import { Video } from "../models/video.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -9,6 +11,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
   if (!name || !description) {
     throw new ApiError(400, "All fields are required");
   }
+
   const existname = await Playlist.findOne({ name });
   if (existname) {
     throw new ApiError(
@@ -37,6 +40,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Please provide valid UserId");
   }
+
   const userPlaylist = await Playlist.find({ owner: userId });
 
   if (!userPlaylist) {
@@ -77,6 +81,14 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   if (!isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
+  const user = await Video.findById(videoId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user._.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
   // if(!isValidObjectId(playlistId && videoId)){
   //   throw new ApiError(400,"Invalid playlistId or videoId")
   // }
@@ -99,7 +111,6 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   // TODO: remove video from playlist
   const { playlistId, videoId } = req.params;
-  // TODO: remove video from playlist
   if (!playlistId || !videoId) {
     throw new ApiError(400, "All filed are required");
   }

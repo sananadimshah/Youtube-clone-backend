@@ -1,4 +1,7 @@
 import mongoose, { isValidObjectId } from "mongoose";
+import { Comment } from "../models/comment.model.js";
+import { Video } from "../models/video.model.js";
+import { Tweet } from "../models/tweet.model.js";
 import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -12,17 +15,28 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
   const findVideo = await Like.findOne({ video: videoId });
+
   if (findVideo) {
     await Like.deleteOne({ video: videoId }, { new: true });
     return res
       .status(200)
       .json({ status: true, msg: "SuccessFully Video Unlike" });
   }
+
   const likeVideo = await Like.create({
     video: videoId,
     likedBy: req.user._id,
   });
+
   return res
     .status(201)
     .json(new ApiResponse(200, likeVideo, "Suceessfully likes the video"));
@@ -35,6 +49,14 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   }
   if (!mongoose.isValidObjectId(commentId)) {
     throw new ApiError(400, "Invalid commentId");
+  }
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    throw new ApiError(404, "Comment not found");
+  }
+
+  if (comment.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
   }
   const findComment = await Like.findOne({ comment: commentId });
   if (findComment) {
@@ -60,6 +82,15 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(tweetId)) {
     throw new ApiError(400, "Invalid tweetId");
   }
+
+  const tweet = await Tweet.findById(tweetId);
+  if (!tweet) {
+    throw new ApiError(404, "Tweet not found");
+  }
+
+  if (tweet.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
   const findTweet = await Like.findOne({ tweet: tweetId });
   if (findTweet) {
     await Like.deleteOne({ tweet: tweetId }, { new: true });
@@ -80,6 +111,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 
 const getLikedVideos = asyncHandler(async (req, res) => {
   //TODO: get all liked videos
+
   const likedVideos = await Like.find({ likedBy: req.user._id });
   if (!likedVideos) {
     throw new ApiError(404, "No Like Video found");
