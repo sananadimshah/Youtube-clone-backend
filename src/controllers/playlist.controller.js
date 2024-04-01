@@ -1,7 +1,6 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Playlist } from "../models/playlist.model.js";
 import { Video } from "../models/video.model.js";
-import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -27,8 +26,6 @@ const createPlaylist = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new ApiResponse(200, "Playlist SuccessFully created", playlist));
-
-  //TODO: create playlist
 });
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
@@ -49,7 +46,6 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Successfully Gets Playlist", userPlaylist));
-  //TODO: get user playlists
 });
 
 const getPlaylistById = asyncHandler(async (req, res) => {
@@ -167,6 +163,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 });
 
 const deletePlaylist = asyncHandler(async (req, res) => {
+  // TODO: delete playlist
   const { playlistId } = req.params;
   if (!playlistId) {
     throw new ApiError(400, "All filed are required");
@@ -194,7 +191,6 @@ const deletePlaylist = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, "SuccessFully DeletePlaylist", deletePlaylistById)
     );
-  // TODO: delete playlist
 });
 
 const updatePlaylist = asyncHandler(async (req, res) => {
@@ -228,7 +224,6 @@ const updatePlaylist = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(200, "Successfully updatePlaylist", updatePlaylistById)
     );
-  //TODO: update playlist
 });
 
 export {

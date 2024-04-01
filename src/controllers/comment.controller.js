@@ -21,6 +21,9 @@ const getVideoComments = asyncHandler(async (req, res) => {
     limit: Number(limit) || 10,
   };
   const aggregate = await Comment.aggregate([{ $match: { video: videoId } }]);
+  if (!aggregate) {
+    throw new ApiError(400, "Video not found");
+  }
   const result = await Comment.aggregatePaginate(aggregate, option);
   if (!result) {
     throw new ApiError(400, "No comment Exist for a video");

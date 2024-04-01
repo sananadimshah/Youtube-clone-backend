@@ -85,12 +85,12 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).send(error.msg);
   }
 });
 
-// controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
+  // controller to return channel list to which user has subscribed
   let { subscriberId } = req.params;
 
   if (!subscriberId) {
@@ -139,7 +139,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         new ApiResponse(200, channel, "Successfully Fetch Subscribed Channel")
       );
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).send(error.msg);
   }
 });
 

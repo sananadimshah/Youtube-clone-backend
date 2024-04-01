@@ -10,19 +10,22 @@ import {
   deleteOnCloudinaryImage,
 } from "../utils/fileUpload.js";
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { query } = req.params;
-  const result = Video.aggregate([
-    {
-      $match: {
-        $or: [{ title: { $regex: query } }, { description: { $regex: query } }],
-      },
-    },
-  ]);
-  // const result = await Video.find();
-  // if (!result) {
-  //   throw new ApiError(400, "can't get the videos");
-  // }
-  res
+  const { page = 1, limit = 10 } = req.params;
+
+  const option = {
+    page: Number(page) || 1,
+    limit: Number(limit) || 1,
+  };
+  const video = await Video.find();
+  if (!video) {
+    throw new ApiError(400, "can't get the videos");
+  }
+  const result = await Video.aggregatePaginate(video, option);
+  if (!result) {
+    throw new ApiError(400, "can't get the videos");
+  }
+
+  return res
     .status(200)
     .json(new ApiResponse(200, result, "Video fetch Successfully"));
 });
@@ -66,7 +69,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
       message: "Video published successfully.",
     });
   } catch (error) {
-    return res.status(500).json({ status: false, msg: error.message });
+    return res.status(500).send(error.msg);
   }
 });
 //   // TODO: get video, upload to cloudinary, create video
@@ -202,15 +205,12 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if (video.owner.toString() !== req.user._id.toString()) {
       throw new ApiError(403, "You are not authorized to perform this action");
     }
-    // Taking out thumbnail and video file
     const videoFile = video.videoFile.public_id;
     const thumbnail = video.thumbnail.public_id;
 
-    // Delete video file and thumbnail from cloudinary
     await deleteOnCloudinaryVideo(videoFile);
     await deleteOnCloudinaryImage(thumbnail);
 
-    // Delete the video from the database
     const deletedVideo = await Video.findByIdAndDelete(videoId);
     if (!deletedVideo) {
       return res
@@ -222,7 +222,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, "Successfully deleted video"));
     }
   } catch (error) {
-    return res.status(500).json({ status: false, msg: error.message });
+    return res.status(500).send(error.msg);
   }
 });
 

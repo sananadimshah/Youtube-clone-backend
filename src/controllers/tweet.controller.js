@@ -18,6 +18,7 @@ const createTweet = asyncHandler(async (req, res) => {
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
+  // TODO: get user tweets
   const { userId } = req.params;
   if (!userId) {
     throw new ApiError(400, "All filed is required");
@@ -25,17 +26,18 @@ const getUserTweets = asyncHandler(async (req, res) => {
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Invalid userId");
   }
-  const getTweet = await Tweet.find({ owner: userId });
+  const getTweet = await Tweet.findById(userId);
   if (getTweet.length === 0) {
     throw new ApiError(400, "This User don't have any Tweet");
   }
   return res
     .status(200)
     .json(new ApiResponse(200, getTweet, "Tweet Succesfully Get"));
-  // TODO: get user tweets
 });
 
 const updateTweet = asyncHandler(async (req, res) => {
+  //TODO: update tweet
+
   const { tweetId } = req.params;
   console.log(tweetId);
   if (!tweetId) {
@@ -65,7 +67,6 @@ const updateTweet = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Tweet Succesfully update", updateUserTweet));
-  //TODO: update tweet
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
