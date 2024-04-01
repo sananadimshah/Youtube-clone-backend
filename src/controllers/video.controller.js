@@ -10,10 +10,18 @@ import {
   deleteOnCloudinaryImage,
 } from "../utils/fileUpload.js";
 const getAllVideos = asyncHandler(async (req, res) => {
-  const result = await Video.find();
-  if (!result) {
-    throw new ApiError(400, "can't get the videos");
-  }
+  const { query } = req.params;
+  const result = Video.aggregate([
+    {
+      $match: {
+        $or: [{ title: { $regex: query } }, { description: { $regex: query } }],
+      },
+    },
+  ]);
+  // const result = await Video.find();
+  // if (!result) {
+  //   throw new ApiError(400, "can't get the videos");
+  // }
   res
     .status(200)
     .json(new ApiResponse(200, result, "Video fetch Successfully"));
@@ -28,7 +36,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     }
     const videoFile = req.files?.videoFile[0]?.path;
     const thumbnailFile = req.files?.thumbnail[0]?.path;
-    console.log(videoFile);
+
     if (!videoFile || !thumbnailFile) {
       throw new ApiError("Video file and thumbnail file are required.");
     }
@@ -48,7 +56,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
       duration: videoFileResponse.duration,
       owner: req.user?._id,
     });
-    console.log(newVideo);
+
     if (!newVideo) {
       throw new ApiError("Error while creating newVideo");
     }
@@ -58,10 +66,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
       message: "Video published successfully.",
     });
   } catch (error) {
-    res.status(500).json({
-      status: false,
-      message: error.message || "Internal Server Error",
-    });
+    return res.status(500).json({ status: false, msg: error.message });
   }
 });
 //   // TODO: get video, upload to cloudinary, create video
@@ -141,11 +146,15 @@ const updateVideo = asyncHandler(async (req, res) => {
   if (!video) {
     throw new ApiError(400, "Video not Found");
   }
+
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
   const obj = {};
   const { title, description } = req.body;
   const thumbnail = req.file?.path;
   if (thumbnail) {
-    await deleteOnCloudinary(video.thumbnail);
+    await deleteOnCloudinaryImage(video.thumbnail);
     const thumbnailfile = await uploadOnCloudinary(thumbnail);
     if (!thumbnailfile.url) {
       throw new ApiError(400, "Error while uploading thumbnailFile");
@@ -190,6 +199,9 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if (!video) {
       throw new ApiError(404, "Video not found");
     }
+    if (video.owner.toString() !== req.user._id.toString()) {
+      throw new ApiError(403, "You are not authorized to perform this action");
+    }
     // Taking out thumbnail and video file
     const videoFile = video.videoFile.public_id;
     const thumbnail = video.thumbnail.public_id;
@@ -210,9 +222,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, "Successfully deleted video"));
     }
   } catch (error) {
-    return res
-      .status(error.status || 500)
-      .json({ status: false, msg: error.message });
+    return res.status(500).json({ status: false, msg: error.message });
   }
 });
 
@@ -224,8 +234,12 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid videoId");
   }
-  const publishStatus = await Video.findById(videoId);
-  if (publishStatus.isPublished === true) {
+
+  const video = await Video.findById(videoId);
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to perform this action");
+  }
+  if (video.isPublished === true) {
     const unPublished = await Video.findByIdAndUpdate(
       videoId,
       { $set: { isPublished: false } },
@@ -235,7 +249,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
       .status(200)
       .json(200, new ApiResponse(unPublished, "SuccessFully Unpublished"));
   }
-  if (publishStatus.isPublished === false) {
+  if (video.isPublished === false) {
     const Published = await Video.findByIdAndUpdate(
       videoId,
       { $set: { isPublished: true } },
