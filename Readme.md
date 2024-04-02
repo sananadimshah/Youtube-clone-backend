@@ -1,81 +1,78 @@
-About A complete backend for YouTube.
 
-Introduction
+# About A complete backend for YouTube.
+
+# Introduction
+
 
 This project encompasses the development of a comprehensive backend system for YouTube, incorporating a wide array of functionalities native to the platform while also integrating features akin to tweet management from Twitter. Further details regarding this project can be found in the documentation provided below.
 
-API Documentation:
-https://www.postman.com/sananadim/workspace/abcd/collection/21418305-d49e70e4-9b7a-49b3-a81f-431d176d82c4?action=share&creator=21418305
 
-Model:
-https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj4
+## 🔗 Links
+ API Documentation :[ Click me ](https://www.postman.com/sananadim/workspace/abcd/documentation/21418305-d49e70e4-9b7a-49b3-a81f-431d176d82c4)
 
-Features
+Model :[ Click me ](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 
-User Management:
 
-Registration, login, logout, password reset
-Profile management (avatar, cover image, details)
-Watch history tracking
+# Features
 
-Video Management:
+## User Management
+- Registration, login, logout 
+- password reset Profile management (avatar, cover image, details) 
+- Watch history tracking
 
-Video upload and publishing
-Video search, sorting, and pagination
-Video editing and deletion
-Visibility control (publish/unpublish)
 
-Tweet Management:
+## Video Management 
 
-Tweet creation and publishing
-Viewing user tweets
-Updating and deleting tweets
+- Video Upload and Publishing Video 
+- Search, Sorting, and Pagination  
+- Video Editing and Deletion Visibility control (publish/unpublish)
 
-Subscription Management:
+## Tweet Management
 
-Subscribing to channels
-Viewing subscriber and subscribed channel lists
-Playlist Management:
+- Tweet creation 
+- Publishing Viewing User Tweets 
+- Updating and Deleting Tweets
 
-Creating, updating, and deleting playlists
-Adding and removing videos from playlists
-Viewing user playlists
+## Subscription Management
 
-Like Management:
+- Subscribing to Channels
+- Viewing Subscriber 
+- Subscribed Channel lists
 
-Liking and unliking videos, comments, and tweets
-Viewing liked videos
+## Playlist Management
 
-Comment Management:
+- Creating, Updating Playlists 
+- Deleting Playlists Adding and Removing Videos from Playlists 
+- Get User Playlists
 
-Adding, updating, and deleting comments on videos
+## Like Management
 
-Dashboard:
+- Liking and Unliking Videos
+- Comments,and Tweets Viewing Liked Videos
 
-Viewing channel statistics (views, subscribers, videos, likes)
-Accessing uploaded videos
+## Comment Management
 
-Health Check:
+- Adding, Updating on Videos
+- Deleting Comments on videos
 
-Endpoint to verify the backend's health
+## Dashboard
+ 
+- Viewing Channel statistics (views, subscribers, videos, likes)
+- Getting Uploaded Videos
 
-Technologies Used:
+## Health Check
 
-Node.js
-Express.js
-MongoDB
-Cloudinary (account required)
+- Endpoint to verify the backend's health
+# Tech Stack
 
-Start the server:
+Node.js Express.js MongoDB Cloudinary (account required)
 
-Copy code
-npm start
 
-Contributing
-If you wish to contribute to this project, please feel free to do so.
 
-License
-This project is licensed under ChaiAurCode.
 
-About
-A complete backend solution for YouTube.
+# Start the server
+
+```bash
+  npm start
+```
+
